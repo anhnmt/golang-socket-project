@@ -39,7 +39,7 @@
 
     const channel = "chat:index";
 
-    window.addEventListener('load', function () {
+    window.addEventListener('load', function (options) {
         const input = document.getElementById("input");
         const container = document.getElementById('messages');
 
@@ -111,10 +111,7 @@
 
             function showPresence(sub) {
                 sub.presence().then(function (result) {
-                    let count = 0;
-                    for (let key in result.presence) {
-                        count++;
-                    }
+                    let count = Object.keys(result?.presence).length || 0;
                     drawText('Presence: now in this room – ' + count + ' clients');
                 }, function (err) {
                     drawText("Presence error: " + JSON.stringify(err));

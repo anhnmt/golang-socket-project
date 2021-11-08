@@ -61,6 +61,9 @@ func main() {
 	cfg.LogLevel = centrifuge.LogLevelDebug
 	cfg.LogHandler = handleLog
 
+	cfg.ClientQueueMaxSize = 104857600
+	cfg.ChannelMaxLength = 1000
+
 	node, err := centrifuge.New(cfg)
 	if err != nil {
 		log.Fatal("centrifuge.New()",
@@ -97,12 +100,6 @@ func main() {
 
 		client.OnPublish(func(e centrifuge.PublishEvent, cb centrifuge.PublishCallback) {
 			log.Info(fmt.Sprintf("user %s publishes into channel %s: %s", client.UserID(), e.Channel, string(e.Data)))
-			// cb(centrifuge.PublishReply{
-			// 	Options: centrifuge.PublishOptions{
-			// 		HistorySize: 100,
-			// 		HistoryTTL:  5 * time.Second,
-			// 	},
-			// }, nil)
 			if !client.IsSubscribed(e.Channel) {
 				cb(centrifuge.PublishReply{}, centrifuge.ErrorPermissionDenied)
 				return
