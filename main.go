@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/centrifugal/centrifuge"
+	"github.com/rs/cors"
 	"go.uber.org/zap"
 
 	"github.com/xdorro/golang-socket-project/internal/config"
@@ -60,9 +61,6 @@ func main() {
 	cfg := centrifuge.DefaultConfig
 	cfg.LogLevel = centrifuge.LogLevelDebug
 	cfg.LogHandler = handleLog
-
-	cfg.ClientQueueMaxSize = 104857600
-	cfg.ChannelMaxLength = 1000
 
 	node, err := centrifuge.New(cfg)
 	if err != nil {
@@ -141,11 +139,15 @@ func main() {
 		)
 	}
 
-	http.Handle("/ws", authMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{})))
-	http.Handle("/", http.FileServer(http.Dir("./public")))
+	mux := http.NewServeMux()
+	mux.Handle("/ws", authMiddleware(centrifuge.NewWebsocketHandler(node, centrifuge.WebsocketConfig{
+		CheckOrigin: func(r *http.Request) bool { return true },
+	})))
+	mux.Handle("/", http.FileServer(http.Dir("./public")))
+	handler := cors.AllowAll().Handler(mux)
 
 	go func() {
-		if err = http.ListenAndServe(port, nil); err != nil {
+		if err = http.ListenAndServe(port, handler); err != nil {
 			log.Fatal("http.ListenAndServe()",
 				zap.Error(err),
 			)
